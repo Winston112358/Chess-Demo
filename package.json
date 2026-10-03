@@ -16,11 +16,13 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "desktop": "npm run build && electron .",
-    "test": "node --test \"tests/unit/**/*.test.js\"",
+    "test": "node --test \"tests/unit/**/*.test.js\" \"tests/resources/**/*.test.js\"",
     "test:ui": "playwright test",
     "check": "npm test && npm run build && npm run test:ui",
     "dist:win": "npm run build && electron-builder --win portable --x64",
-    "test:release": "playwright test --config playwright.release.config.js"
+    "test:release": "playwright test --config playwright.release.config.js",
+    "setup:stockfish": "node scripts/setup-stockfish.js",
+    "check:stockfish": "node scripts/check-stockfish-resources.js"
   },
   "dependencies": {
     "chess.js": "1.4.0"

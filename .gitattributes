@@ -1,0 +1,6 @@
+# Preserve upstream resource bytes: manifest SHA-256 values cover exact files.
+/vendor/stockfish/native/** -text
+/vendor/stockfish/web/** -text
+/src/web/public/engines/stockfish/** -text
+# This upstream license intentionally uses CRLF.
+/vendor/stockfish/web/Copying.txt whitespace=cr-at-eol

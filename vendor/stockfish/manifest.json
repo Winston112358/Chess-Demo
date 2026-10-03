@@ -1,0 +1,128 @@
+{
+  "manifestVersion": 1,
+  "generatedBy": "scripts/setup-stockfish.js",
+  "generatedAt": "2026-10-03T09:33:53.730Z",
+  "cacheDir": ".cache/stockfish",
+  "native": {
+    "engine": "Stockfish",
+    "release": "sf_19",
+    "buildVersion": "19",
+    "sourceCommit": "edb0d9db6731067ec50ce619ff372b463bc4dd5d",
+    "releaseUrl": "https://github.com/official-stockfish/Stockfish/releases/tag/sf_19",
+    "downloadUrl": "https://github.com/official-stockfish/Stockfish/releases/download/sf_19/stockfish-windows-x86-64-universal.zip",
+    "expectedBytes": 81431614,
+    "expectedSha256": "3c8bf1f9ea66a09350a40df4f632288285ac206d99f33ab5842c408fc30b48a7",
+    "exe": "vendor/stockfish/native/stockfish-windows-x86-64-universal.exe",
+    "notes": "NNUE 网络内嵌于官方二进制，无独立网络文件"
+  },
+  "web": {
+    "engine": "stockfish.js",
+    "flavor": "lite single-threaded",
+    "package": "stockfish@19.0.0",
+    "packageVersion": "19.0.0",
+    "author": "Nathan Rugg (nmrugg), Chess.com",
+    "usageUrl": "https://github.com/nmrugg/stockfish.js",
+    "portCommit": "54fde71d90c7c403964f6cacef48f7bbec495df1",
+    "tarballUrl": "https://registry.npmjs.org/stockfish/-/stockfish-19.0.0.tgz",
+    "expectedIntegrity": "sha512-jDyYLbqNpboQcMs5HodTHI2CrKL74zkQWb1+sgoNXw5HI6avTblW4G0X7afFt3BBOc6VbTSkOV64EUxm/DWSpg==",
+    "publicDir": "src/web/public/engines/stockfish"
+  },
+  "files": [
+    {
+      "path": "vendor/stockfish/native/stockfish-windows-x86-64-universal.exe",
+      "role": "native-exe",
+      "bytes": 103046300,
+      "sha256": "45bc8e4969147db9c2eb533810637994619bff0eacc81ccfd9854394901bcbd0"
+    },
+    {
+      "path": "vendor/stockfish/native/Copying.txt",
+      "role": "native-license",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "vendor/stockfish/native/AUTHORS",
+      "role": "native-license",
+      "bytes": 6922,
+      "sha256": "59c7a457f0665f26453ad90f474db7cd328f0983a7e8031cded5d6f25e1a1eb6"
+    },
+    {
+      "path": "vendor/stockfish/native/README.md",
+      "role": "native-license",
+      "bytes": 7772,
+      "sha256": "ae3ef5c2282400d643c6e923d0b8b8d8fe35cf98762701f0379c79bde16c3a26"
+    },
+    {
+      "path": "vendor/stockfish/source/Stockfish-edb0d9db6731067ec50ce619ff372b463bc4dd5d-src.zip",
+      "role": "source-archive",
+      "bytes": 382624,
+      "sha256": "a6368d704182ad976d73c8b8349119f6bf9e76737bdf609fd8e873346193dc98"
+    },
+    {
+      "path": "src/web/public/engines/stockfish/stockfish-19-lite-single.js",
+      "role": "web-js",
+      "bytes": 21415,
+      "sha256": "d3344124ab067fb0b90ee77873bb8e9fbf5fc01bc525fe714b0f942581e889e6"
+    },
+    {
+      "path": "src/web/public/engines/stockfish/stockfish-19-lite-single.wasm",
+      "role": "web-wasm",
+      "bytes": 1787571,
+      "sha256": "57ac2d72312aba346760e3f173f687a8c211208e97a87268436f7f0e10bb5387"
+    },
+    {
+      "path": "vendor/stockfish/web/Copying.txt",
+      "role": "web-license",
+      "bytes": 35821,
+      "sha256": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b"
+    },
+    {
+      "path": "vendor/stockfish/web/README.md",
+      "role": "web-license",
+      "bytes": 5576,
+      "sha256": "06dd16ff7cd369c38e96f00dc8462245832083facac574ce663b612ea73cd625"
+    },
+    {
+      "path": "vendor/stockfish/web/package.json",
+      "role": "web-license",
+      "bytes": 995,
+      "sha256": "05c54a01a21441d3091a82e109b87d3e6e605c4244a6f5eeea40fffc244ce4ab"
+    },
+    {
+      "path": "vendor/stockfish/source/stockfish.js-54fde71d90c7c403964f6cacef48f7bbec495df1-src.zip",
+      "role": "source-archive",
+      "bytes": 737789,
+      "sha256": "5fcbf93e5c8668e7d6527de9094344b8f385ebc185f61e38469584c6abd4cc02"
+    }
+  ],
+  "downloads": [
+    {
+      "role": "native-zip",
+      "name": "stockfish-windows-x86-64-universal.zip",
+      "url": "https://github.com/official-stockfish/Stockfish/releases/download/sf_19/stockfish-windows-x86-64-universal.zip",
+      "bytes": 81431614,
+      "sha256": "3c8bf1f9ea66a09350a40df4f632288285ac206d99f33ab5842c408fc30b48a7"
+    },
+    {
+      "role": "source-archive",
+      "name": "Stockfish-edb0d9db6731067ec50ce619ff372b463bc4dd5d-src.zip",
+      "url": "https://github.com/official-stockfish/Stockfish/archive/edb0d9db6731067ec50ce619ff372b463bc4dd5d.zip",
+      "bytes": 382624,
+      "sha256": "a6368d704182ad976d73c8b8349119f6bf9e76737bdf609fd8e873346193dc98"
+    },
+    {
+      "role": "web-tarball",
+      "name": "stockfish-19.0.0.tgz",
+      "url": "https://registry.npmjs.org/stockfish/-/stockfish-19.0.0.tgz",
+      "bytes": 161239627,
+      "integrity": "sha512-jDyYLbqNpboQcMs5HodTHI2CrKL74zkQWb1+sgoNXw5HI6avTblW4G0X7afFt3BBOc6VbTSkOV64EUxm/DWSpg=="
+    },
+    {
+      "role": "source-archive",
+      "name": "stockfish.js-54fde71d90c7c403964f6cacef48f7bbec495df1-src.zip",
+      "url": "https://github.com/nmrugg/stockfish.js/archive/54fde71d90c7c403964f6cacef48f7bbec495df1.zip",
+      "bytes": 737789,
+      "sha256": "5fcbf93e5c8668e7d6527de9094344b8f385ebc185f61e38469584c6abd4cc02"
+    }
+  ]
+}
