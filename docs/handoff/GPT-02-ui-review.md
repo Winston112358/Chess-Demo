@@ -11,4 +11,6 @@ DS-01 遵守文件边界；实际复跑核心 8 项、UI 10 项及网页构建�
 
 两项均先通过失败回归测试复现，再修复。棋谱根据 initialFen 的完整回合号及着法颜色分组；滚动限于棋谱容器内部。测试位于 tests/e2e/review.spec.js。README 已同步为当前可玩状态。
 
-Git 检查：DS 未提交，初始 main/origin/main 均为 a818fee。由 GPT 按工程基础、可玩界面、验收修复及后续发行工作分别提交。
+修复后核心 8 项、UI 12 项和网页构建全部通过。
+
+Git 检查：DS 未提交，初始 main/origin/main 均为 a818fee。由 GPT 分批提交：bd23d72 为工程基础，97fcab8 为可玩界面与验收修复，均已推送 origin/main。后续发行单独提交。

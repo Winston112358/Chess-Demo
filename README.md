@@ -23,15 +23,23 @@ npm.cmd check      # 测试、构建、浏览器自动化
 
 浏览器自动化默认使用本机 Microsoft Edge，桌面自动化通过 Playwright 启动 Electron，不要求人工点击。首次启动桌面或运行桌面测试时，Electron 可能联网下载运行时；随后可离线启动。关闭开发服务器：在启动它的终端按 Ctrl+C；关闭桌面窗口即可退出 Electron。
 
-## 后续发行
+## Windows 便携版
 
-Windows x64 便携 EXE 的打包工具、发行脚本和资源路径将在第三阶段锁定并实际构建验收；本阶段只安装网页与桌面启动所需依赖。`dist/web/` 是可部署的静态网页目录。
+已生成 `release/Chess-Demo-0.2.0-x64.exe`，双击启动，无需安装 Node.js。本版本支持同机双人，尚未接入 Stockfish 和写实素材。
+
+```powershell
+npm.cmd run dist:win       # 构建 Windows x64 便携 EXE
+npm.cmd run test:release   # 把真实 EXE 复制到独立临时目录，验证断网启动与走棋
+```
+
+便携版已实际在仓库外启动、断网重载、走棋与悔棋通过；单文件约 100 MB。发行包当前未签名，使用 Electron 默认图标。`dist/web/` 是可部署的静态网页目录。详细构建记录见 [Windows 构建说明](docs/WINDOWS-BUILD.md)。
 
 ## 协作入口
 
 - [工程结构与阶段范围](docs/ARCHITECTURE.md)
 - [规则与引擎接口](docs/CONTRACTS.md)
 - [DeepSeek 第一项任务提示词](docs/tasks/DS-01-playable-ui.md)
+- [DeepSeek 下一项 Stockfish 资源任务](docs/tasks/DS-02-stockfish-resources.md)
 - [任务回报目录](docs/handoff/README.md)
 
 依赖版本由 package-lock.json 锁定；核心业务代码放在 src/，根目录仅保留项目说明和工具配置。规则库来源：[chess.js](https://github.com/jhlywa/chess.js)，构建工具：[Vite](https://vite.dev/guide/)，桌面运行时：[Electron](https://www.electronjs.org/docs/latest/tutorial/security)。
