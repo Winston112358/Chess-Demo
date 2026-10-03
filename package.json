@@ -22,7 +22,8 @@
     "dist:win": "npm run build && electron-builder --win portable --x64",
     "test:release": "playwright test --config playwright.release.config.js",
     "setup:stockfish": "node scripts/setup-stockfish.js",
-    "check:stockfish": "node scripts/check-stockfish-resources.js"
+    "check:stockfish": "node scripts/check-stockfish-resources.js",
+    "test:engine-transports": "node --test \"tests/engine/**/*.test.js\" && playwright test --config playwright.engine.config.js"
   },
   "dependencies": {
     "chess.js": "1.4.0"
