@@ -62,7 +62,17 @@ h1 { margin: 0; font-size: clamp(26px, 4vw, 38px); }
 .card { min-width: 0; padding: 16px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
 .card h2 { margin: 0 0 10px; font-size: 15px; }
 .last-move { margin: 0; color: var(--muted); line-height: 1.6; overflow-wrap: anywhere; }
+.engine-status { min-height: 1.4em; margin: 10px 0 0; color: var(--green-strong); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.engine-status--error { color: var(--danger); }
+#engine-retry { margin-top: 10px; padding: 10px 16px; font-weight: 600; }
 .draw-claims { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.settings { display: grid; gap: 12px; }
+.setting { display: grid; gap: 5px; color: var(--muted); font-size: 13px; }
+.setting span { font-weight: 600; color: var(--ink); }
+.setting select { width: 100%; padding: 9px 10px; background: #fbfdfb; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+.setting select:hover { border-color: rgba(61, 122, 95, .45); }
+.setting select:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
 .draw-claims:not(:empty) { margin-top: 12px; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }

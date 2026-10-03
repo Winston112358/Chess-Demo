@@ -1,4 +1,6 @@
 import { createGameSession } from '../core/game-session.js';
+import { createMatchController } from '../engine/match-controller.js';
+import { createAppEngine } from './engine.js';
 import { createBoardView } from './board.js';
 
 const REASON_TEXT = {
@@ -17,6 +19,11 @@ const COLOR_TEXT = { w: '白方', b: '黑方' };
 
 export function startApp() {
   const session = createGameSession();
+  const matchController = createMatchController({
+    session,
+    createEngine: createAppEngine,
+    onChange: handleChange,
+  });
   const byId = (id) => document.getElementById(id);
 
   const boardEl = byId('board');
@@ -37,14 +44,33 @@ export function startApp() {
   const fenFallbackEl = byId('fen-fallback');
   const promotionDialog = byId('promotion-dialog');
   const promotionCancelBtn = byId('promotion-cancel');
+  const modeSelect = byId('game-mode');
+  const humanColorSelect = byId('human-color');
+  const difficultySelect = byId('difficulty');
+  const engineStatusEl = byId('engine-status');
+  const engineRetryBtn = byId('engine-retry');
 
-  let snapshot = session.getSnapshot();
+  let snapshot = matchController.getSnapshot();
+  let state = matchController.getState();
   let selected = null;
   let targets = new Map();
   let flipped = false;
   let pendingPromotion = null;
 
   const boardView = createBoardView({ boardEl, ranksEl, filesEl, onSquareClick: handleSquareClick });
+
+  function handleChange(event) {
+    const positionChanged = event.snapshot.revision !== snapshot.revision;
+    const playerChanged = event.state.mode !== state.mode || event.state.humanColor !== state.humanColor;
+    snapshot = event.snapshot;
+    state = event.state;
+    if (positionChanged || playerChanged || snapshot.outcome) clearTransient();
+    render();
+  }
+
+  function humanCanAct() {
+    return snapshot.outcome === null && (state.mode === 'local' || snapshot.turn === state.humanColor);
+  }
 
   function pieceAt(square) {
     const row = 8 - Number(square[1]);
@@ -57,8 +83,14 @@ export function startApp() {
     targets = new Map();
   }
 
+  function clearTransient() {
+    pendingPromotion = null;
+    clearSelection();
+    if (promotionDialog.open) promotionDialog.close();
+  }
+
   function selectSquare(square) {
-    const moves = session.legalMovesFrom(square);
+    const moves = matchController.legalMovesFrom(square);
     if (moves.length === 0) {
       clearSelection();
       render();
@@ -73,7 +105,7 @@ export function startApp() {
   }
 
   function handleSquareClick(square) {
-    if (pendingPromotion) return;
+    if (pendingPromotion || !humanCanAct()) return;
     const piece = pieceAt(square);
     if (selected) {
       if (targets.has(square)) {
@@ -97,14 +129,13 @@ export function startApp() {
   }
 
   function attemptMove(from, to) {
-    const result = session.tryMove({ from, to });
+    const result = matchController.tryMove({ from, to });
     if (result.code === 'promotion-required') {
       pendingPromotion = { from, to };
       promotionDialog.showModal();
       return;
     }
     clearSelection();
-    if (result.ok) snapshot = result.snapshot;
     render();
   }
 
@@ -112,17 +143,14 @@ export function startApp() {
     if (!pendingPromotion) return;
     const { from, to } = pendingPromotion;
     pendingPromotion = null;
-    const result = session.tryMove({ from, to, promotion });
     clearSelection();
+    matchController.tryMove({ from, to, promotion });
     if (promotionDialog.open) promotionDialog.close();
-    if (result.ok) snapshot = result.snapshot;
     render();
   }
 
   function cancelPromotion() {
-    pendingPromotion = null;
-    clearSelection();
-    if (promotionDialog.open) promotionDialog.close();
+    clearTransient();
     render();
   }
 
@@ -153,6 +181,8 @@ export function startApp() {
       statusEl.textContent = `${REASON_TEXT[snapshot.outcome.reason]}，${RESULT_TEXT[snapshot.outcome.result]}。`;
     } else if (snapshot.inCheck) {
       statusEl.textContent = `将军！${COLOR_TEXT[snapshot.turn]}应将。`;
+    } else if (state.mode === 'computer' && snapshot.turn !== state.humanColor) {
+      statusEl.textContent = state.thinking ? '电脑正在思考，请稍候。' : '等待电脑走棋。';
     } else {
       statusEl.textContent = '点击棋子查看合法目标；再次点击所选棋子或空白处可取消选择。';
     }
@@ -207,6 +237,10 @@ export function startApp() {
   }
 
   function renderDrawClaims() {
+    if (!humanCanAct()) {
+      drawClaimsEl.replaceChildren();
+      return;
+    }
     drawClaimsEl.replaceChildren(
       ...snapshot.drawClaims.map((claim) => {
         const button = document.createElement('button');
@@ -214,13 +248,32 @@ export function startApp() {
         button.id = `claim-${claim}`;
         button.textContent = `申请和棋（${CLAIM_TEXT[claim]}）`;
         button.addEventListener('click', () => {
-          const result = session.claimDraw(claim);
-          if (result.ok) snapshot = result.snapshot;
-          render();
+          matchController.claimDraw(claim);
         });
         return button;
       }),
     );
+  }
+
+  function renderEngineStatus() {
+    if (state.error) {
+      engineStatusEl.textContent = `电脑走棋出错：${state.error}`;
+    } else if (state.mode === 'computer' && state.thinking) {
+      engineStatusEl.textContent = '电脑思考中…';
+    } else if (state.paused) {
+      engineStatusEl.textContent = '电脑走棋已暂停。';
+    } else {
+      engineStatusEl.textContent = '';
+    }
+    engineStatusEl.classList.toggle('engine-status--error', Boolean(state.error));
+    engineRetryBtn.hidden = !(state.error || state.paused);
+    engineRetryBtn.textContent = state.error ? '重试电脑走棋' : '继续电脑走棋';
+  }
+
+  function renderSettings() {
+    if (modeSelect.value !== state.mode) modeSelect.value = state.mode;
+    if (humanColorSelect.value !== state.humanColor) humanColorSelect.value = state.humanColor;
+    if (difficultySelect.value !== state.level) difficultySelect.value = state.level;
   }
 
   function syncFen() {
@@ -241,24 +294,29 @@ export function startApp() {
     renderLastMove();
     renderMoveList();
     renderDrawClaims();
+    renderEngineStatus();
+    renderSettings();
     undoBtn.disabled = !snapshot.canUndo;
     syncFen();
   }
 
   undoBtn.addEventListener('click', () => {
-    pendingPromotion = null;
-    clearSelection();
-    const result = session.undo();
-    if (result.ok) snapshot = result.snapshot;
-    render();
+    clearTransient();
+    try {
+      matchController.undo();
+    } catch {
+      render();
+    }
   });
 
   resetBtn.addEventListener('click', () => {
-    pendingPromotion = null;
-    clearSelection();
-    snapshot = session.reset();
+    clearTransient();
     setFenMessage('');
-    render();
+    try {
+      matchController.reset();
+    } catch (error) {
+      setFenMessage(error.message, true);
+    }
   });
 
   flipBtn.addEventListener('click', () => {
@@ -267,14 +325,14 @@ export function startApp() {
   });
 
   loadFenBtn.addEventListener('click', () => {
+    clearSelection();
     try {
-      snapshot = session.reset({ fen: fenInput.value.trim() });
+      matchController.reset({ fen: fenInput.value.trim() });
     } catch (error) {
       setFenMessage(`无法载入该 FEN：${error.message}`, true);
       return;
     }
     pendingPromotion = null;
-    clearSelection();
     setFenMessage('已载入 FEN 局面。');
     render();
   });
@@ -296,6 +354,33 @@ export function startApp() {
     }
   });
 
+  function applySettings() {
+    clearTransient();
+    try {
+      matchController.configure({
+        mode: modeSelect.value,
+        humanColor: humanColorSelect.value,
+        level: difficultySelect.value,
+      });
+    } catch (error) {
+      engineStatusEl.textContent = `设置失败：${error.message}`;
+      engineStatusEl.classList.add('engine-status--error');
+    }
+  }
+
+  modeSelect.addEventListener('change', applySettings);
+  humanColorSelect.addEventListener('change', applySettings);
+  difficultySelect.addEventListener('change', applySettings);
+
+  engineRetryBtn.addEventListener('click', () => {
+    try {
+      matchController.retry();
+    } catch (error) {
+      engineStatusEl.textContent = `无法继续：${error.message}`;
+      engineStatusEl.classList.add('engine-status--error');
+    }
+  });
+
   promotionDialog.addEventListener('cancel', (event) => {
     event.preventDefault();
     cancelPromotion();
@@ -307,6 +392,10 @@ export function startApp() {
   for (const option of promotionDialog.querySelectorAll('[data-promotion]')) {
     option.addEventListener('click', () => choosePromotion(option.dataset.promotion));
   }
+
+  window.addEventListener('pagehide', () => {
+    matchController.dispose().catch(() => {});
+  }, { once: true });
 
   render();
 }

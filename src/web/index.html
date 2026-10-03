@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws://127.0.0.1:5173; object-src 'none'; base-uri 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws://127.0.0.1:5173; object-src 'none'; base-uri 'self'" />
     <title>国际象棋</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -12,7 +12,7 @@
     <main class="shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">CHESS · 同机双人</p>
+          <p class="eyebrow">CHESS · 同机双人 / 人机对弈</p>
           <h1>国际象棋</h1>
         </div>
         <p class="turn" id="turn" data-turn="w" data-state="playing">白方走棋</p>
@@ -32,7 +32,38 @@
           <section class="card" aria-labelledby="state-heading">
             <h2 id="state-heading">对局状态</h2>
             <p class="last-move" id="last-move">最近一着：暂无</p>
+            <p class="engine-status" id="engine-status" role="status"></p>
+            <button id="engine-retry" type="button" class="secondary" hidden>重试电脑走棋</button>
             <div class="draw-claims" id="draw-claims"></div>
+          </section>
+
+          <section class="card" aria-labelledby="setup-heading">
+            <h2 id="setup-heading">对局设置</h2>
+            <div class="settings">
+              <label class="setting" for="game-mode">
+                <span>对局模式</span>
+                <select id="game-mode">
+                  <option value="local">同机双人</option>
+                  <option value="computer">人机对弈</option>
+                </select>
+              </label>
+              <label class="setting" for="human-color">
+                <span>我执棋色</span>
+                <select id="human-color">
+                  <option value="w">我执白</option>
+                  <option value="b">我执黑</option>
+                </select>
+              </label>
+              <label class="setting" for="difficulty">
+                <span>电脑难度</span>
+                <select id="difficulty">
+                  <option value="easy">入门</option>
+                  <option value="normal">普通</option>
+                  <option value="hard">困难</option>
+                  <option value="expert">专家</option>
+                </select>
+              </label>
+            </div>
           </section>
 
           <section class="card" aria-labelledby="actions-heading">
