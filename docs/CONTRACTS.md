@@ -57,10 +57,16 @@ const session = createGameSession();
 
 点击/拖动只产生 `{from,to,promotion?}`。每次成功改变棋局，重新读取快照并渲染。悔棋、重开、载入 FEN、终局后清空选中格与待升变状态。FEN 导入只知道起点，不含此前历史；不能推断导入前的重复局面次数。
 
-## 未来引擎契约
+## 引擎契约
 
 正式字段见 src/engine/contract.js。请求携带 requestId、revision、initialFen、moves、moveTimeMs、skillLevel；结果返回 requestId、revision、bestMove。
 
-`search(request, {signal})` 返回 Promise；`dispose()` 释放 Worker 或本机进程。控制器必须检查请求标识与 revision、校验着法合法性。引擎接口本阶段仅定义，不能通过随机着法伪装 Stockfish。
+`createUciAdapter({createTransport})` 的 `search(request, {signal})` 返回 Promise；`dispose()` 释放 Worker 或本机进程。请求必须使用单行合法 FEN、完整合法 UCI 历史；skillLevel 为 0–20 整数，moveTimeMs 为 100–5000 整数。握手、就绪和搜索都有超时。正常搜索复用引擎；取消、错误或超时会退休连接，下一次搜索等待清理后再建立连接。非法/空着法会被拒绝，只有无合法着法的终局可返回 bestMove=null。
+
+`createMatchController({session, createEngine, onChange})` 包装已有 GameSession，界面使用其 getSnapshot、legalMovesFrom、tryMove、undo、reset、claimDraw。所有棋局变化仍由 GameSession 实施；控制器拒绝电脑回合的人工走棋，通过请求标识、epoch 和 revision 阻止过期结果改变棋盘。
+
+新增接口：getState() 返回 `{mode, humanColor, level, thinking, paused, error}`；configure({mode?,humanColor?,level?}) 修改设置并取消旧搜索；retry() 清除错误或暂停并继续电脑回合；dispose() 停止对局并释放引擎。mode 为 local/computer，humanColor 为 w/b，level 为 COMPUTER_LEVELS 的 easy/normal/hard/expert。onChange({snapshot,state}) 在状态变化后通知页面。设置不会自动重开棋局。
+
+人机悔棋：电脑思考中撤回刚才的人类一着；电脑已回复时撤回一整轮。撤回电脑执白的第一着后暂停，retry 或重新配置人机设置可继续走棋。翻转棋盘是纯显示操作，不调用 configure。仍不允许用随机着法代替 Stockfish。
 
 参考：[chess.js](https://jhlywa.github.io/chess.js/)、[FIDE 基本规则与和棋条款](https://handbook.fide.com/chapter/e012023)。

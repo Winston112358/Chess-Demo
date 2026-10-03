@@ -7,6 +7,9 @@
 | src/core/game-session.js | 规则包装、局面历史、修订号、终局与和棋判断 | GPT |
 | src/web/ | 页面、棋盘绘制、控制器、交互、样式 | DeepSeek 按任务单实现 |
 | src/engine/contract.js | 引擎请求与结果契约 | GPT |
+| src/engine/uci-adapter.js | UCI 握手、搜索预算、合法性校验、取消与连接清理 | GPT |
+| src/engine/match-controller.js | 人机回合、过期结果检查、悔棋与错误恢复 | GPT |
+| src/engine/*-transport.js | 原生进程 / 浏览器 Worker 的行通信 | DeepSeek 实现，GPT 验收 |
 | src/desktop/main.js | 安全的 Electron 启动和退出 | GPT 定边界，DeepSeek 可承担明确改造 |
 | tests/unit/ | 规则和状态边界测试 | GPT |
 | tests/e2e/ | 命令行运行的浏览器与桌面自动化 | DeepSeek 可实现，GPT 验收 |
@@ -39,6 +42,6 @@ GameSession 是唯一的棋局事实来源。UI 可以保存选中格、棋盘�
 
 ## 当前阶段与边界
 
-第一步工程基础、第二步同机双人界面和第三步 Windows 便携发行已完成。真实 EXE 通过仓库外启动与断网走棋测试。Stockfish 19 固定资源已准备并通过原生与 Node WASM 的真实 UCI 检查；尚未接入棋局。下一任务由 DeepSeek 实现原生进程与浏览器 Worker 的通信层，再由 GPT 实现搜索取消、过期结果检查、受限桌面 IPC 和对局集成。棋力分档、联网对弈和生成的写实素材仍待实现。
+第一步工程基础、第二步同机双人界面和第三步 Windows 便携发行已完成。真实 EXE 通过仓库外启动与断网走棋测试。Stockfish 19 资源、原生进程 / 真实浏览器 Worker 通信、共用 UCI 搜索器和人机对局控制器已实现并验证。生产入口尚未启用人机模式；下一任务 DS-04 按 GPT 规定的 IPC 边界接入页面与桌面，再构建 0.3.0 人机版本。联网对弈和生成的写实素材仍待实现。
 
 规则包装区别三次重复/50 回合的当前局面申请与五次重复/75 回合的自动和棋，支持常见子力不足判断。预先声明下一着的和棋申请、任意复杂死局的完整证明、PGN 导入历史、计时赛规则不属于第一步；后续必须明确实现范围，不能声称已满足全部赛事裁定。
