@@ -1,0 +1,27 @@
+{
+  "manifestVersion": 1,
+  "status": "draft",
+  "style": "staunton-realistic-v1",
+  "source": "OpenAI built-in imagegen, generated for this project on 2026-10-03",
+  "pieces": [
+    { "id": "wk", "color": "w", "type": "k", "name": "白王", "path": null },
+    { "id": "wq", "color": "w", "type": "q", "name": "白后", "path": null },
+    { "id": "wr", "color": "w", "type": "r", "name": "白车", "path": null },
+    { "id": "wb", "color": "w", "type": "b", "name": "白象", "path": null },
+    {
+      "id": "wn", "color": "w", "type": "n", "name": "白马",
+      "path": "assets/concepts/wn-staunton-v1.png", "status": "sample",
+      "width": 1254, "height": 1254, "bytes": 729405,
+      "sha256": "6479a9628f58faf224899405fc50457d20bd32fc5083715d8037fc71ba6881f1",
+      "contentBounds": { "left": 358, "top": 180, "right": 891, "bottom": 1183 },
+      "boundsAlphaThreshold": 16
+    },
+    { "id": "wp", "color": "w", "type": "p", "name": "白兵", "path": null },
+    { "id": "bk", "color": "b", "type": "k", "name": "黑王", "path": null },
+    { "id": "bq", "color": "b", "type": "q", "name": "黑后", "path": null },
+    { "id": "br", "color": "b", "type": "r", "name": "黑车", "path": null },
+    { "id": "bb", "color": "b", "type": "b", "name": "黑象", "path": null },
+    { "id": "bn", "color": "b", "type": "n", "name": "黑马", "path": null },
+    { "id": "bp", "color": "b", "type": "p", "name": "黑兵", "path": null }
+  ]
+}

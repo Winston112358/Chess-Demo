@@ -1,6 +1,6 @@
 # Chess Demo · 国际象棋
 
-网页与 Windows 客户端共用一个前端。当前支持同机双人、人机对弈（固定版本 Stockfish 19）、合法目标提示、升变、悔棋、翻转、和棋申请、SAN 棋谱及 FEN 局面工具。写实素材尚未制作。
+网页与 Windows 客户端共用一个前端。当前支持同机双人、人机对弈（固定版本 Stockfish 19）、合法目标提示、升变、悔棋、翻转、和棋申请、SAN 棋谱及 FEN 局面工具。正式游戏仍使用临时符号；写实素材进度见 [棋子素材说明](docs/PIECE-ASSETS.md)。
 
 人机对弈使用固定版本引擎：浏览器加载 `stockfish@19.0.0` 的 lite single-threaded WASM，Windows 客户端通过受限 IPC 调用原生 `sf_19` universal 引擎。引擎来源、许可与源码归档见 [Stockfish 资源说明](docs/STOCKFISH-RESOURCES.md)。
 
