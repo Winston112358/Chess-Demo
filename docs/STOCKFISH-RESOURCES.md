@@ -71,5 +71,5 @@ npm test                                 # 规则与资源安全测试（不下�
 - 清单必须完整列出固定版本的引擎、许可/作者资料、两份源码和四个下载记录；缺失、重复、无摘要或路径越界会被拒绝。资源校验失败时不会启动引擎。
 - 原生引擎真实启动并完成 `uci`→`uciok`、`isready`→`readyok`、`position startpos moves e2e4` + `go movetime 600`，用 chess.js 校验返回的 `bestmove` 合法；设置 `Threads=1`、`Hash=16`，带超时与 `windowsHide`，检查后 `quit`/必要时强制结束进程。
 - 网页引擎通过官方支持的 Node CLI 做了同样的 UCI 冒烟：Emscripten 产物是 CommonJS，而本项目 `"type": "module"`，因此在校验时把公开文件的字节级副本放入 `.cache/stockfish/tmp-web-smoke-*` 的临时 CommonJS 沙箱运行，不修改公开文件本身。
-- 浏览器 Worker/WASM 集成尚未实现；生产页面 CSP 仍为 `script-src 'self'`，未开放 WASM 编译。本任务不修改 CSP，也不声称网页人机对战已接入，该部分由 GPT 后续集成。
-- 没有进行人工桌面点击验收；真实浏览器内的运行效果留待集成阶段验证。
+- DS-04 已接入浏览器 Worker/WASM 与桌面原生人机对弈。生产 CSP 使用 `script-src 'self' 'wasm-unsafe-eval'` 和 `worker-src 'self'`；Edge、Electron 与仓库外便携 EXE 均以真实引擎返回着法验收。
+- `npm.cmd run dist:web` 创建独立静态网页 ZIP：lite JS/WASM 在 engines/stockfish/，许可与精确源码放在 third-party/stockfish/。Windows 包的对应资料放在 resources/stockfish/。

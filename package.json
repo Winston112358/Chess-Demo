@@ -1,6 +1,6 @@
 {
   "name": "chess-demo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "国际象棋：网页版与 Windows 客户端",
   "private": true,
   "type": "module",
@@ -20,6 +20,7 @@
     "test:ui": "playwright test",
     "check": "npm test && npm run build && npm run test:ui",
     "dist:win": "npm run build && electron-builder --win portable --x64",
+    "dist:web": "npm run build && node scripts/package-web.js",
     "test:release": "playwright test --config playwright.release.config.js",
     "setup:stockfish": "node scripts/setup-stockfish.js",
     "check:stockfish": "node scripts/check-stockfish-resources.js",
@@ -42,7 +43,13 @@
     "productName": "Chess Demo",
     "electronDist": "node_modules/electron/dist",
     "directories": { "output": "release" },
-    "files": ["dist/web/**/*", "src/desktop/**/*", "package.json"],
+    "files": ["dist/web/**/*", "src/desktop/**/*", "src/engine/**/*", "package.json"],
+    "extraResources": [
+      { "from": "vendor/stockfish/native", "to": "stockfish/native" },
+      { "from": "vendor/stockfish/web", "to": "stockfish/web" },
+      { "from": "vendor/stockfish/source", "to": "stockfish/source" },
+      { "from": "vendor/stockfish/manifest.json", "to": "stockfish/manifest.json" }
+    ],
     "win": {
       "target": "portable",
       "signAndEditExecutable": false,

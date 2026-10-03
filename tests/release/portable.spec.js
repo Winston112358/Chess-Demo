@@ -18,22 +18,39 @@ async function freePort() {
   return port;
 }
 
-test('portable EXE starts outside the repository and plays offline', async () => {
+function listEnginePids() {
+  const command = "Get-Process -Name 'stockfish-windows-x86-64-universal' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id";
+  return new Promise((resolvePromise) => {
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
+      windowsHide: true, timeout: 15000,
+    }, (error, stdout) => {
+      resolvePromise(String(stdout ?? '')
+        .split(/\s+/)
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value > 0));
+    });
+  });
+}
+
+test('portable EXE starts outside the repository, plays offline and releases the engine', async () => {
+  test.setTimeout(240000);
   const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
   const { version } = JSON.parse(await readFile(join(projectRoot, 'package.json'), 'utf8'));
   const temporaryRoot = resolve(tmpdir());
   const isolatedDirectory = await mkdtemp(join(temporaryRoot, 'Chess Demo smoke '));
   const executable = join(isolatedDirectory, 'Chess Demo.exe');
   await copyFile(join(projectRoot, 'release', `Chess-Demo-${version}-x64.exe`), executable);
+  const baseline = await listEnginePids();
   const port = await freePort();
   const child = spawn(executable, [`--remote-debugging-port=${port}`], {
     cwd: isolatedDirectory, windowsHide: true, stdio: 'ignore',
   });
   let browser;
   let launchError;
+  let spawned = [];
   child.once('error', (error) => { launchError = error; });
   try {
-    const deadline = Date.now() + 40000;
+    const deadline = Date.now() + 120000;
     while (!browser && Date.now() < deadline) {
       if (launchError) throw launchError;
       try {
@@ -62,7 +79,29 @@ test('portable EXE starts outside the repository and plays offline', async () =>
     expect(await page.evaluate(() => typeof window.require)).toBe('undefined');
     expect(errors).toEqual([]);
     await page.screenshot({ path: 'test-results/portable-board.png' });
+
+    // Offline human-vs-computer game through the packaged native engine.
+    await page.selectOption('#difficulty', 'expert');
+    await page.selectOption('#game-mode', 'computer');
+    await page.locator('[data-square="e2"]').click();
+    await page.locator('[data-square="e4"]').click();
+    await expect(page.locator('#move-list .move-san:not(.move-san--empty)')).toHaveCount(2, { timeout: 90000 });
+    await expect(page.locator('#turn')).toHaveText('白方走棋');
+    await expect(page.locator('#engine-status')).toHaveText('');
+    spawned = (await listEnginePids()).filter((pid) => !baseline.includes(pid));
+    expect(spawned.length, '打包版本应启动原生 Stockfish').toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+    await page.screenshot({ path: 'test-results/portable-computer.png' });
+
+    await page.locator('[data-square="g1"]').click();
+    await page.locator('[data-square="f3"]').click();
+    await expect(page.locator('#engine-status')).toContainText('电脑思考');
+
     await page.close();
+    await expect.poll(() => child.exitCode, { timeout: 40000 }).not.toBeNull();
+    await expect.poll(async () => (await listEnginePids()).filter((pid) => spawned.includes(pid)), {
+      timeout: 30000,
+    }).toEqual([]);
   } finally {
     await browser?.close();
     if (child.pid && child.exitCode === null) {
