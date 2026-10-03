@@ -6,3 +6,15 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Dependencies and generated artifacts
+node_modules/
+dist/
+release/
+test-results/
+playwright-report/
+.cache/
+*.log
+.env
+.env.*
+!.env.example
