@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws://127.0.0.1:5173; object-src 'none'; base-uri 'self'" />
+    <title>国际象棋</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CHESS · 同机双人</p>
+          <h1>国际象棋</h1>
+        </div>
+        <p class="turn" id="turn" data-turn="w" data-state="playing">白方走棋</p>
+      </header>
+
+      <section class="layout" aria-label="棋局区域">
+        <div class="board-column">
+          <div class="board-frame">
+            <div class="coord-ranks" id="coord-ranks" aria-hidden="true"></div>
+            <div class="board" id="board" aria-label="棋盘"></div>
+            <div class="coord-files" id="coord-files" aria-hidden="true"></div>
+          </div>
+          <p class="board-status" id="status" role="status"></p>
+        </div>
+
+        <aside class="panel">
+          <section class="card" aria-labelledby="state-heading">
+            <h2 id="state-heading">对局状态</h2>
+            <p class="last-move" id="last-move">最近一着：暂无</p>
+            <div class="draw-claims" id="draw-claims"></div>
+          </section>
+
+          <section class="card" aria-labelledby="actions-heading">
+            <h2 id="actions-heading">操作</h2>
+            <div class="actions">
+              <button id="undo" type="button">悔棋</button>
+              <button id="reset" type="button">重置棋局</button>
+              <button id="flip" type="button" class="secondary">翻转棋盘</button>
+            </div>
+          </section>
+
+          <section class="card" aria-labelledby="moves-heading">
+            <h2 id="moves-heading">棋谱</h2>
+            <ol class="move-list" id="move-list"></ol>
+          </section>
+
+          <details class="card tools" id="position-tools">
+            <summary>局面工具</summary>
+            <label for="fen-input">FEN 局面</label>
+            <input id="fen-input" type="text" spellcheck="false" autocomplete="off" />
+            <div class="actions">
+              <button id="load-fen" type="button">载入 FEN</button>
+              <button id="copy-fen" type="button" class="secondary">复制当前 FEN</button>
+            </div>
+            <p class="message" id="fen-message" role="status"></p>
+            <code class="fen-fallback" id="fen-fallback" hidden></code>
+          </details>
+        </aside>
+      </section>
+    </main>
+
+    <dialog class="promotion-dialog" id="promotion-dialog" aria-labelledby="promotion-title">
+      <h2 id="promotion-title">选择升变棋子</h2>
+      <p>兵已到达底线，请选择升变后的棋子。</p>
+      <div class="promotion-options">
+        <button type="button" data-promotion="q" aria-label="升变为后">♛<span>后</span></button>
+        <button type="button" data-promotion="r" aria-label="升变为车">♜<span>车</span></button>
+        <button type="button" data-promotion="b" aria-label="升变为象">♝<span>象</span></button>
+        <button type="button" data-promotion="n" aria-label="升变为马">♞<span>马</span></button>
+      </div>
+      <button type="button" class="cancel" id="promotion-cancel">取消升变</button>
+    </dialog>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

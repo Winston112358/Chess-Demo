@@ -1,0 +1,312 @@
+import { createGameSession } from '../core/game-session.js';
+import { createBoardView } from './board.js';
+
+const REASON_TEXT = {
+  checkmate: '将死',
+  stalemate: '逼和',
+  'insufficient-material': '子力不足和棋',
+  'fivefold-repetition': '五次重复局面和棋',
+  'seventy-five-moves': '七十五回合规则和棋',
+  'threefold-repetition': '三次重复局面和棋',
+  'fifty-moves': '五十回合规则和棋',
+};
+
+const RESULT_TEXT = { '1-0': '白方胜', '0-1': '黑方胜', '1/2-1/2': '和棋' };
+const CLAIM_TEXT = { 'threefold-repetition': '三次重复局面', 'fifty-moves': '五十回合' };
+const COLOR_TEXT = { w: '白方', b: '黑方' };
+
+export function startApp() {
+  const session = createGameSession();
+  const byId = (id) => document.getElementById(id);
+
+  const boardEl = byId('board');
+  const ranksEl = byId('coord-ranks');
+  const filesEl = byId('coord-files');
+  const turnEl = byId('turn');
+  const statusEl = byId('status');
+  const lastMoveEl = byId('last-move');
+  const moveListEl = byId('move-list');
+  const undoBtn = byId('undo');
+  const resetBtn = byId('reset');
+  const flipBtn = byId('flip');
+  const drawClaimsEl = byId('draw-claims');
+  const fenInput = byId('fen-input');
+  const loadFenBtn = byId('load-fen');
+  const copyFenBtn = byId('copy-fen');
+  const fenMessageEl = byId('fen-message');
+  const fenFallbackEl = byId('fen-fallback');
+  const promotionDialog = byId('promotion-dialog');
+  const promotionCancelBtn = byId('promotion-cancel');
+
+  let snapshot = session.getSnapshot();
+  let selected = null;
+  let targets = new Map();
+  let flipped = false;
+  let pendingPromotion = null;
+
+  const boardView = createBoardView({ boardEl, ranksEl, filesEl, onSquareClick: handleSquareClick });
+
+  function pieceAt(square) {
+    const row = 8 - Number(square[1]);
+    const column = square.charCodeAt(0) - 97;
+    return snapshot.board[row][column];
+  }
+
+  function clearSelection() {
+    selected = null;
+    targets = new Map();
+  }
+
+  function selectSquare(square) {
+    const moves = session.legalMovesFrom(square);
+    if (moves.length === 0) {
+      clearSelection();
+      render();
+      return;
+    }
+    selected = square;
+    targets = new Map();
+    for (const move of moves) {
+      targets.set(move.to, Boolean(targets.get(move.to)) || Boolean(move.captured));
+    }
+    render();
+  }
+
+  function handleSquareClick(square) {
+    if (pendingPromotion) return;
+    const piece = pieceAt(square);
+    if (selected) {
+      if (targets.has(square)) {
+        attemptMove(selected, square);
+        return;
+      }
+      if (square === selected) {
+        clearSelection();
+        render();
+        return;
+      }
+      if (piece && piece.color === snapshot.turn) {
+        selectSquare(square);
+        return;
+      }
+      clearSelection();
+      render();
+      return;
+    }
+    if (piece && piece.color === snapshot.turn) selectSquare(square);
+  }
+
+  function attemptMove(from, to) {
+    const result = session.tryMove({ from, to });
+    if (result.code === 'promotion-required') {
+      pendingPromotion = { from, to };
+      promotionDialog.showModal();
+      return;
+    }
+    clearSelection();
+    if (result.ok) snapshot = result.snapshot;
+    render();
+  }
+
+  function choosePromotion(promotion) {
+    if (!pendingPromotion) return;
+    const { from, to } = pendingPromotion;
+    pendingPromotion = null;
+    const result = session.tryMove({ from, to, promotion });
+    clearSelection();
+    if (promotionDialog.open) promotionDialog.close();
+    if (result.ok) snapshot = result.snapshot;
+    render();
+  }
+
+  function cancelPromotion() {
+    pendingPromotion = null;
+    clearSelection();
+    if (promotionDialog.open) promotionDialog.close();
+    render();
+  }
+
+  function findKingSquare() {
+    if (!snapshot.inCheck) return null;
+    for (const row of snapshot.board) {
+      for (const piece of row) {
+        if (piece && piece.type === 'k' && piece.color === snapshot.turn) return piece.square;
+      }
+    }
+    return null;
+  }
+
+  function renderTurn() {
+    turnEl.dataset.turn = snapshot.turn;
+    turnEl.dataset.state = snapshot.outcome ? 'over' : 'playing';
+    if (!snapshot.outcome) {
+      turnEl.textContent = `${COLOR_TEXT[snapshot.turn]}走棋`;
+    } else if (snapshot.outcome.result === '1/2-1/2') {
+      turnEl.textContent = '和棋（1/2-1/2）';
+    } else {
+      turnEl.textContent = `${RESULT_TEXT[snapshot.outcome.result]}（${snapshot.outcome.result}）`;
+    }
+  }
+
+  function renderStatus() {
+    if (snapshot.outcome) {
+      statusEl.textContent = `${REASON_TEXT[snapshot.outcome.reason]}，${RESULT_TEXT[snapshot.outcome.result]}。`;
+    } else if (snapshot.inCheck) {
+      statusEl.textContent = `将军！${COLOR_TEXT[snapshot.turn]}应将。`;
+    } else {
+      statusEl.textContent = '点击棋子查看合法目标；再次点击所选棋子或空白处可取消选择。';
+    }
+  }
+
+  function renderLastMove() {
+    const last = snapshot.lastMove;
+    lastMoveEl.textContent = last
+      ? `最近一着：${last.san}（${COLOR_TEXT[last.color]} ${last.from} → ${last.to}）`
+      : '最近一着：暂无';
+  }
+
+  function createMoveCell(move) {
+    const span = document.createElement('span');
+    span.className = move ? 'move-san' : 'move-san move-san--empty';
+    span.textContent = move?.san ?? '…';
+    if (move === snapshot.lastMove) span.classList.add('move-san--last');
+    return span;
+  }
+
+  function renderMoveList() {
+    const history = snapshot.history;
+    if (history.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'move-empty';
+      empty.textContent = '尚无着法';
+      moveListEl.replaceChildren(empty);
+      return;
+    }
+    const rounds = new Map();
+    let fullmove = Number(snapshot.initialFen.split(' ')[5]);
+    for (const move of history) {
+      if (!rounds.has(fullmove)) rounds.set(fullmove, {});
+      rounds.get(fullmove)[move.color] = move;
+      if (move.color === 'b') fullmove += 1;
+    }
+    const rows = [];
+    for (const [fullmoveNumber, moves] of rounds) {
+      const row = document.createElement('li');
+      row.className = 'move-row';
+      const number = document.createElement('span');
+      number.className = 'move-index';
+      number.textContent = `${fullmoveNumber}.`;
+      const white = createMoveCell(moves.w);
+      const black = createMoveCell(moves.b);
+      row.append(number, white, black);
+      rows.push(row);
+    }
+    moveListEl.replaceChildren(...rows);
+    // Scroll only the notation container, keeping the board in place on narrow screens.
+    moveListEl.scrollTop = moveListEl.scrollHeight;
+  }
+
+  function renderDrawClaims() {
+    drawClaimsEl.replaceChildren(
+      ...snapshot.drawClaims.map((claim) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = `claim-${claim}`;
+        button.textContent = `申请和棋（${CLAIM_TEXT[claim]}）`;
+        button.addEventListener('click', () => {
+          const result = session.claimDraw(claim);
+          if (result.ok) snapshot = result.snapshot;
+          render();
+        });
+        return button;
+      }),
+    );
+  }
+
+  function syncFen() {
+    if (document.activeElement !== fenInput) fenInput.value = snapshot.fen;
+  }
+
+  function setFenMessage(text, isError = false) {
+    fenMessageEl.textContent = text;
+    fenMessageEl.classList.toggle('message--error', isError);
+  }
+
+  function render() {
+    boardEl.dataset.flipped = String(flipped);
+    document.body.dataset.revision = String(snapshot.revision);
+    boardView.render(snapshot, { flipped, selected, targets, checkSquare: findKingSquare() });
+    renderTurn();
+    renderStatus();
+    renderLastMove();
+    renderMoveList();
+    renderDrawClaims();
+    undoBtn.disabled = !snapshot.canUndo;
+    syncFen();
+  }
+
+  undoBtn.addEventListener('click', () => {
+    pendingPromotion = null;
+    clearSelection();
+    const result = session.undo();
+    if (result.ok) snapshot = result.snapshot;
+    render();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    pendingPromotion = null;
+    clearSelection();
+    snapshot = session.reset();
+    setFenMessage('');
+    render();
+  });
+
+  flipBtn.addEventListener('click', () => {
+    flipped = !flipped;
+    render();
+  });
+
+  loadFenBtn.addEventListener('click', () => {
+    try {
+      snapshot = session.reset({ fen: fenInput.value.trim() });
+    } catch (error) {
+      setFenMessage(`无法载入该 FEN：${error.message}`, true);
+      return;
+    }
+    pendingPromotion = null;
+    clearSelection();
+    setFenMessage('已载入 FEN 局面。');
+    render();
+  });
+
+  copyFenBtn.addEventListener('click', async () => {
+    const fen = snapshot.fen;
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+        throw new Error('clipboard unavailable');
+      }
+      await navigator.clipboard.writeText(fen);
+      fenFallbackEl.hidden = true;
+      fenFallbackEl.textContent = '';
+      setFenMessage('已复制当前 FEN。');
+    } catch {
+      fenFallbackEl.hidden = false;
+      fenFallbackEl.textContent = fen;
+      setFenMessage('自动复制不可用，请手动选择下方文本复制。');
+    }
+  });
+
+  promotionDialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    cancelPromotion();
+  });
+  promotionDialog.addEventListener('click', (event) => {
+    if (event.target === promotionDialog) cancelPromotion();
+  });
+  promotionCancelBtn.addEventListener('click', cancelPromotion);
+  for (const option of promotionDialog.querySelectorAll('[data-promotion]')) {
+    option.addEventListener('click', () => choosePromotion(option.dataset.promotion));
+  }
+
+  render();
+}
