@@ -18,12 +18,13 @@ export function createMatchController({ session, createEngine, onChange = () => 
   let active = null;
   let error = null;
   let paused = false;
+  let started = false;
   let disposed = false;
   let disposal = null;
   let queued = false;
   let settling = Promise.resolve();
 
-  const getState = () => Object.freeze({ ...settings, thinking: Boolean(active), paused, error });
+  const getState = () => Object.freeze({ ...settings, started, thinking: Boolean(active), paused, error });
   const notify = () => { if (!disposed) onChange({ snapshot: session.getSnapshot(), state: getState() }); };
   const computerTurn = () => settings.mode === 'computer' && session.getSnapshot().turn !== settings.humanColor;
   const isCurrent = (operation) => !disposed && active === operation && epoch === operation.epoch
@@ -44,7 +45,7 @@ export function createMatchController({ session, createEngine, onChange = () => 
       queued = false;
       const expectedEpoch = epoch;
       await settling; // a cancelled search must settle before reusing its adapter
-      if (disposed || expectedEpoch !== epoch || active || error || paused
+      if (disposed || !started || expectedEpoch !== epoch || active || error || paused
         || !computerTurn() || session.getSnapshot().outcome) return;
       startSearch();
     });
@@ -95,6 +96,9 @@ export function createMatchController({ session, createEngine, onChange = () => 
   }
 
   function tryMove(move) {
+    if (settings.mode === 'computer' && !started) {
+      return { ok: false, code: 'match-not-started', snapshot: session.getSnapshot() };
+    }
     if (disposed || computerTurn()) return { ok: false, code: 'computer-turn', snapshot: session.getSnapshot() };
     invalidate();
     const result = session.tryMove(move);
@@ -108,20 +112,26 @@ export function createMatchController({ session, createEngine, onChange = () => 
     invalidate();
     let result = session.undo();
     // Return to the previous human decision, including undo during computer thinking.
-    if (result.ok && computerTurn() && result.snapshot.canUndo) result = session.undo();
-    paused = computerTurn();
+    if (started && result.ok && computerTurn() && result.snapshot.canUndo) result = session.undo();
+    paused = started && computerTurn();
     notify();
     return result;
   }
 
   function reset(options) {
     if (disposed) throw new Error('对局已释放');
+    // Validate before cancelling: a rejected FEN must preserve the running match.
+    const result = session.reset(options);
     invalidate();
-    try { return session.reset(options); }
-    finally { notify(); schedule(); }
+    started = false;
+    notify();
+    return result;
   }
 
   function claimDraw(reason) {
+    if (settings.mode === 'computer' && !started) {
+      return { ok: false, code: 'match-not-started', snapshot: session.getSnapshot() };
+    }
     if (disposed || computerTurn()) return { ok: false, code: 'computer-turn', snapshot: session.getSnapshot() };
     invalidate();
     const result = session.claimDraw(reason);
@@ -135,8 +145,21 @@ export function createMatchController({ session, createEngine, onChange = () => 
     const next = { ...settings, ...update };
     if (!['local', 'computer'].includes(next.mode) || !['w', 'b'].includes(next.humanColor)
       || !Object.hasOwn(COMPUTER_LEVELS, next.level)) throw new TypeError('对局设置无效');
+    if (next.mode === settings.mode && next.humanColor === settings.humanColor && next.level === settings.level) {
+      return getState();
+    }
     invalidate();
     settings = { mode: next.mode, humanColor: next.humanColor, level: next.level };
+    started = false;
+    notify();
+    return getState();
+  }
+
+  function start() {
+    if (disposed) throw new Error('对局已释放');
+    if (settings.mode !== 'computer' || started || session.getSnapshot().outcome) return getState();
+    invalidate();
+    started = true;
     notify();
     schedule();
     return getState();
@@ -144,6 +167,7 @@ export function createMatchController({ session, createEngine, onChange = () => 
 
   function retry() {
     if (disposed) throw new Error('对局已释放');
+    if (!started) return;
     invalidate();
     notify();
     schedule();
@@ -160,6 +184,6 @@ export function createMatchController({ session, createEngine, onChange = () => 
 
   return {
     getSnapshot: () => session.getSnapshot(), legalMovesFrom: (square) => session.legalMovesFrom(square),
-    getState, tryMove, undo, reset, claimDraw, configure, retry, dispose,
+    getState, tryMove, undo, reset, claimDraw, configure, start, retry, dispose,
   };
 }

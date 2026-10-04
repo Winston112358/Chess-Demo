@@ -47,7 +47,7 @@ export function createBoardView({ boardEl, ranksEl, filesEl, onSquareClick }) {
     return { order, ranks, files };
   }
 
-  function render(snapshot, { flipped = false, selected = null, targets = new Map(), checkSquare = null } = {}) {
+  function render(snapshot, { flipped = false, selected = null, targets = new Map(), checkSquare = null, showCaptureHints = true } = {}) {
     const { order, ranks, files } = displayOrder(flipped);
     boardEl.append(...order.map((square) => squares.get(square)));
     ranksEl.replaceChildren(...ranks.map((rank) => coordinateLabel(String(rank))));
@@ -59,7 +59,9 @@ export function createBoardView({ boardEl, ranksEl, filesEl, onSquareClick }) {
       const isTarget = targets.has(square);
       element.className = `square ${isLightSquare(square) ? 'square--light' : 'square--dark'}`;
       if (square === selected) element.classList.add('square--selected');
-      if (isTarget) element.classList.add(targets.get(square) ? 'square--capture' : 'square--target');
+      if (isTarget && (!targets.get(square) || showCaptureHints)) {
+        element.classList.add(targets.get(square) ? 'square--capture' : 'square--target');
+      }
       if (square === checkSquare) element.classList.add('square--check');
       if (lastMove && (square === lastMove.from || square === lastMove.to)) element.classList.add('square--last');
 

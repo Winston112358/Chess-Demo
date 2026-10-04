@@ -76,6 +76,11 @@ test('web ZIP runs from an isolated HTTP subdirectory with matching engine sourc
     expect(await page.evaluate(() => typeof window.chessEngine)).toBe('undefined');
     await page.selectOption('#difficulty', 'easy');
     await page.selectOption('#game-mode', 'computer');
+    await expect(page.locator('#turn')).toHaveText('待开始');
+    expect(requests.some((pathname) => pathname.endsWith('.wasm'))).toBe(false);
+    await page.getByRole('button', { name: '开始', exact: true }).click();
+    await page.getByRole('button', { name: '吃子提示：开', exact: true }).click();
+    await expect(page.locator('#capture-hints')).toHaveAttribute('aria-pressed', 'false');
     await page.locator('[data-square="e2"]').click();
     await page.locator('[data-square="e4"]').click();
     await expect(page.locator('#move-list .move-san:not(.move-san--empty)')).toHaveCount(2, { timeout: 30000 });

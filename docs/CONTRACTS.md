@@ -65,8 +65,19 @@ const session = createGameSession();
 
 `createMatchController({session, createEngine, onChange})` 包装已有 GameSession，界面使用其 getSnapshot、legalMovesFrom、tryMove、undo、reset、claimDraw。所有棋局变化仍由 GameSession 实施；控制器拒绝电脑回合的人工走棋，通过请求标识、epoch 和 revision 阻止过期结果改变棋盘。
 
-新增接口：getState() 返回 `{mode, humanColor, level, thinking, paused, error}`；configure({mode?,humanColor?,level?}) 修改设置并取消旧搜索；retry() 清除错误或暂停并继续电脑回合；dispose() 停止对局并释放引擎。mode 为 local/computer，humanColor 为 w/b，level 为 COMPUTER_LEVELS 的 easy/normal/hard/expert。onChange({snapshot,state}) 在状态变化后通知页面。设置不会自动重开棋局。
+新增接口：getState() 返回 `{mode, humanColor, level, started, thinking, paused, error}`；configure({mode?,humanColor?,level?}) 在设置实际改变时取消旧搜索、进入待开始状态并保留当前局面；start() 明确开始当前人机对局，重复调用不会重复搜索；retry() 仅在已开始时清除错误或暂停并继续电脑回合，不能绕过 start；dispose() 停止对局并释放引擎。mode 为 local/computer，humanColor 为 w/b，level 为 COMPUTER_LEVELS 的 easy/normal/hard/expert。onChange({snapshot,state}) 在状态变化后通知页面。人机模式待开始时不能走棋或申请和棋（返回 match-not-started），不会创建引擎；有效 reset/FEN 载入后也需再次 start；非法 FEN 不改变棋局或搜索状态。同机双人无需 start。
 
-人机悔棋：电脑思考中撤回刚才的人类一着；电脑已回复时撤回一整轮。撤回电脑执白的第一着后暂停，retry 或重新配置人机设置可继续走棋。翻转棋盘是纯显示操作，不调用 configure。仍不允许用随机着法代替 Stockfish。
+已开始的人机悔棋：电脑思考中撤回刚才的人类一着；电脑已回复时撤回一整轮。撤回电脑执白的第一着后暂停，retry 可继续走棋；重新配置后需 start。待开始时悔棋仅撤回一着且不启动引擎。翻转棋盘与吃子提示开关是纯显示操作，不调用 configure；吃子提示只控制 legalMovesFrom 已提供的 captured 目标标记，包括吃过路兵，不改变合法目标与走法。仍不允许用随机着法代替 Stockfish。
+
+四档难度均使用本地 Stockfish，通过 UCI 实际发送不同参数，不调用远程大模型：
+
+| level | 显示名称 | Skill Level | go movetime（毫秒） |
+| --- | --- | --- | --- |
+| easy | 入门 | 0 | 300 |
+| normal | 普通 | 8 | 700 |
+| hard | 困难 | 16 | 1500 |
+| expert | 专家 | 20 | 2500 |
+
+当前档位未标定 Elo；网页版 lite WASM 与桌面原生构建采用相同参数，不承诺棋力完全相同。
 
 参考：[chess.js](https://jhlywa.github.io/chess.js/)、[FIDE 基本规则与和棋条款](https://handbook.fide.com/chapter/e012023)。

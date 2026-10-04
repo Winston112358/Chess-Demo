@@ -11,6 +11,7 @@ async function startComputer(page, { humanColor = 'w', difficulty = 'easy' } = {
   await page.selectOption('#difficulty', difficulty);
   await page.selectOption('#game-mode', 'computer');
   if (humanColor !== 'w') await page.selectOption('#human-color', humanColor);
+  await page.getByRole('button', { name: '开始', exact: true }).click();
 }
 
 async function humanMove(page, from, to) {
@@ -116,7 +117,7 @@ test('reset while the computer thinks discards the search', async ({ page }) => 
 
   await page.getByRole('button', { name: '重置棋局' }).click();
   await expect(plies(page)).toHaveCount(0);
-  await expect(page.locator('#turn')).toHaveText('白方走棋');
+  await expect(page.locator('#turn')).toHaveText('待开始');
   await page.waitForTimeout(1500);
   await expect(plies(page)).toHaveCount(0);
 });
@@ -127,6 +128,7 @@ test('computer replies from a custom FEN start', async ({ page }) => {
   await startComputer(page);
   await loadFen(page, CUSTOM_FEN);
   await expect(page.locator('#fen-message')).toContainText('已载入');
+  await page.getByRole('button', { name: '开始', exact: true }).click();
 
   await humanMove(page, 'a2', 'a3');
   await expect(plies(page)).toHaveCount(2, { timeout: 30000 });

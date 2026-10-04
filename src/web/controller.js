@@ -50,6 +50,8 @@ export function startApp() {
   const difficultySelect = byId('difficulty');
   const engineStatusEl = byId('engine-status');
   const engineRetryBtn = byId('engine-retry');
+  const startBtn = byId('start');
+  const captureHintsBtn = byId('capture-hints');
 
   let snapshot = matchController.getSnapshot();
   let state = matchController.getState();
@@ -57,6 +59,7 @@ export function startApp() {
   let targets = new Map();
   let flipped = false;
   let pendingPromotion = null;
+  let showCaptureHints = true;
 
   const boardView = createBoardView({ boardEl, ranksEl, filesEl, onSquareClick: handleSquareClick });
 
@@ -70,7 +73,7 @@ export function startApp() {
   }
 
   function humanCanAct() {
-    return snapshot.outcome === null && (state.mode === 'local' || snapshot.turn === state.humanColor);
+    return snapshot.outcome === null && (state.mode === 'local' || (state.started && snapshot.turn === state.humanColor));
   }
 
   function pieceAt(square) {
@@ -178,8 +181,11 @@ export function startApp() {
 
   function renderTurn() {
     turnEl.dataset.turn = snapshot.turn;
-    turnEl.dataset.state = snapshot.outcome ? 'over' : 'playing';
-    if (!snapshot.outcome) {
+    const waiting = state.mode === 'computer' && !state.started && !snapshot.outcome;
+    turnEl.dataset.state = snapshot.outcome ? 'over' : waiting ? 'waiting' : 'playing';
+    if (waiting) {
+      turnEl.textContent = '待开始';
+    } else if (!snapshot.outcome) {
       turnEl.textContent = `${COLOR_TEXT[snapshot.turn]}走棋`;
     } else if (snapshot.outcome.result === '1/2-1/2') {
       turnEl.textContent = '和棋（1/2-1/2）';
@@ -191,6 +197,8 @@ export function startApp() {
   function renderStatus() {
     if (snapshot.outcome) {
       statusEl.textContent = `${REASON_TEXT[snapshot.outcome.reason]}，${RESULT_TEXT[snapshot.outcome.result]}。`;
+    } else if (state.mode === 'computer' && !state.started) {
+      statusEl.textContent = '选好执棋色和电脑难度，点击“开始”后下棋。';
     } else if (snapshot.inCheck) {
       statusEl.textContent = `将军！${COLOR_TEXT[snapshot.turn]}应将。`;
     } else if (state.mode === 'computer' && snapshot.turn !== state.humanColor) {
@@ -286,6 +294,11 @@ export function startApp() {
     if (modeSelect.value !== state.mode) modeSelect.value = state.mode;
     if (humanColorSelect.value !== state.humanColor) humanColorSelect.value = state.humanColor;
     if (difficultySelect.value !== state.level) difficultySelect.value = state.level;
+    startBtn.hidden = state.mode !== 'computer';
+    startBtn.disabled = state.started || Boolean(snapshot.outcome);
+    startBtn.textContent = state.started ? '已开始' : '开始';
+    captureHintsBtn.setAttribute('aria-pressed', String(showCaptureHints));
+    captureHintsBtn.textContent = `吃子提示：${showCaptureHints ? '开' : '关'}`;
   }
 
   function syncFen() {
@@ -300,7 +313,7 @@ export function startApp() {
   function render() {
     boardEl.dataset.flipped = String(flipped);
     document.body.dataset.revision = String(snapshot.revision);
-    boardView.render(snapshot, { flipped, selected, targets, checkSquare: findKingSquare() });
+    boardView.render(snapshot, { flipped, selected, targets, checkSquare: findKingSquare(), showCaptureHints });
     renderTurn();
     renderStatus();
     renderLastMove();
@@ -343,6 +356,7 @@ export function startApp() {
       matchController.reset({ fen: fenInput.value.trim() });
     } catch (error) {
       setFenMessage(`无法载入该 FEN：${error.message}`, true);
+      render();
       return;
     }
     pendingPromotion = null;
@@ -384,6 +398,12 @@ export function startApp() {
   modeSelect.addEventListener('change', applySettings);
   humanColorSelect.addEventListener('change', applySettings);
   difficultySelect.addEventListener('change', applySettings);
+
+  startBtn.addEventListener('click', () => matchController.start());
+  captureHintsBtn.addEventListener('click', () => {
+    showCaptureHints = !showCaptureHints;
+    render();
+  });
 
   engineRetryBtn.addEventListener('click', () => {
     try {

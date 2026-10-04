@@ -40,6 +40,9 @@ test('desktop bridge plays the native engine and releases it on exit', async () 
 
     await page.selectOption('#difficulty', 'expert');
     await page.selectOption('#game-mode', 'computer');
+    await expect(page.locator('#turn')).toHaveText('待开始');
+    expect((await listEnginePids()).filter((pid) => !baseline.includes(pid))).toEqual([]);
+    await page.getByRole('button', { name: '开始', exact: true }).click();
     await page.locator('[data-square="e2"]').click();
     await page.locator('[data-square="e4"]').click();
     await expect(page.locator('#move-list .move-san:not(.move-san--empty)')).toHaveCount(2, { timeout: 60000 });

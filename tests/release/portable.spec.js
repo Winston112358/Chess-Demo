@@ -96,6 +96,14 @@ test('portable EXE starts outside the repository, plays offline and releases the
     // Offline human-vs-computer game through the packaged native engine.
     await page.selectOption('#difficulty', 'expert');
     await page.selectOption('#game-mode', 'computer');
+    await expect(page.locator('#turn')).toHaveText('待开始');
+    await page.locator('[data-square="e2"]').click();
+    await page.locator('[data-square="e4"]').click();
+    await expect(page.locator('#move-list .move-san:not(.move-san--empty)')).toHaveCount(0);
+    expect((await listEnginePids()).filter((pid) => !baseline.includes(pid))).toEqual([]);
+    await page.getByRole('button', { name: '开始', exact: true }).click();
+    await page.getByRole('button', { name: '吃子提示：开', exact: true }).click();
+    await expect(page.locator('#capture-hints')).toHaveAttribute('aria-pressed', 'false');
     await page.locator('[data-square="e2"]').click();
     await page.locator('[data-square="e4"]').click();
     await expect(page.locator('#move-list .move-san:not(.move-san--empty)')).toHaveCount(2, { timeout: 90000 });
