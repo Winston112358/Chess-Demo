@@ -22,6 +22,31 @@ test('undo and reset monotonically invalidate earlier revisions', () => {
   assert.equal(game.getSnapshot().revision, 3);
 });
 
+test('FEN rejects an attacked non-moving king without replacing the current game', () => {
+  const game = createGameSession();
+  game.tryMove({ from: 'e2', to: 'e4' });
+  const before = game.getSnapshot();
+  for (const fen of [
+    '7k/8/8/8/8/8/4r3/4K2R w - - 0 1', // Both kings attacked, white to move.
+    '4k2r/4R3/8/8/8/8/8/7K b - - 0 1', // Both kings attacked, black to move.
+    '7k/8/8/8/8/8/8/4K2R w - - 0 1', // Only the non-moving king attacked.
+    '8/8/8/8/8/8/4k3/4K3 w - - 0 1', // Adjacent kings.
+  ]) {
+    assert.throws(() => createGameSession({ fen }), /未走棋.*被将军/);
+    assert.throws(() => game.reset({ fen }), /未走棋.*被将军/);
+    assert.deepEqual(game.getSnapshot(), before);
+  }
+});
+
+test('FEN still accepts a legal check against the side to move', () => {
+  const game = createGameSession({ fen: '7k/8/8/8/8/8/4r3/4K3 w - - 0 1' });
+  assert.equal(game.getSnapshot().inCheck, true);
+  assert.equal(game.tryMove({ from: 'e1', to: 'd1' }).ok, true);
+  assert.equal(game.getSnapshot().inCheck, false);
+  game.reset({ fen: '7k/8/8/8/8/8/8/4K2R b - - 0 1' });
+  assert.equal(game.getSnapshot().inCheck, true);
+});
+
 test('promotion requires an explicit choice and supports underpromotion', () => {
   const game = createGameSession({ fen: '7k/P7/8/8/8/8/8/7K w - - 0 1' });
   const result = game.tryMove({ from: 'a7', to: 'a8' });

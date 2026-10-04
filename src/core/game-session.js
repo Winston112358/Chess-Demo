@@ -13,9 +13,21 @@ function describeMove(move) {
   };
 }
 
+function createPosition(fen) {
+  const position = new Chess(fen);
+  // chess.js validates FEN structure, but a legal position cannot leave the
+  // king of the side that just moved in check. This also rejects adjacent kings
+  // and positions where both kings are attacked; check on the moving side is OK.
+  const otherKing = position.board().flat().find((piece) => piece?.type === 'k' && piece.color !== position.turn());
+  if (position.isAttacked(otherKing.square, position.turn())) {
+    throw new Error('非法 FEN：未走棋的一方处于被将军状态。');
+  }
+  return position;
+}
+
 /** The only owner of chess rules and position history. UI receives detached snapshots. */
 export function createGameSession({ fen = DEFAULT_POSITION } = {}) {
-  let chess = new Chess(fen);
+  let chess = createPosition(fen);
   let initialFen = chess.fen();
   let revision = 0;
   let positionKeys = [positionKey(chess)];
@@ -88,7 +100,7 @@ export function createGameSession({ fen = DEFAULT_POSITION } = {}) {
 
   function reset({ fen: nextFen = DEFAULT_POSITION } = {}) {
     // Construct first so invalid input cannot destroy the current game.
-    const nextChess = new Chess(nextFen);
+    const nextChess = createPosition(nextFen);
     chess = nextChess;
     initialFen = chess.fen();
     positionKeys = [positionKey(chess)];
