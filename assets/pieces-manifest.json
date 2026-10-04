@@ -1,8 +1,8 @@
 {
   "manifestVersion": 1,
   "status": "draft",
-  "style": "staunton-realistic-v1",
-  "source": "OpenAI built-in imagegen, generated for this project on 2026-10-03",
+  "style": "staunton-realistic-overhead-v2",
+  "source": "OpenAI built-in imagegen, overhead perspective revised for this project on 2026-10-04",
   "pieces": [
     { "id": "wk", "color": "w", "type": "k", "name": "白王", "path": null },
     { "id": "wq", "color": "w", "type": "q", "name": "白后", "path": null },
@@ -10,10 +10,10 @@
     { "id": "wb", "color": "w", "type": "b", "name": "白象", "path": null },
     {
       "id": "wn", "color": "w", "type": "n", "name": "白马",
-      "path": "assets/concepts/wn-staunton-v1.png", "status": "sample",
-      "width": 1254, "height": 1254, "bytes": 729405,
-      "sha256": "6479a9628f58faf224899405fc50457d20bd32fc5083715d8037fc71ba6881f1",
-      "contentBounds": { "left": 358, "top": 180, "right": 891, "bottom": 1183 },
+      "path": "assets/concepts/wn-staunton-overhead-v2.png", "status": "sample",
+      "width": 1254, "height": 1254, "bytes": 936456,
+      "sha256": "fafb0c4b4d874d0025ea3869d475c5c394b638d7a478e2d1db4a56807e4806ba",
+      "contentBounds": { "left": 293, "top": 115, "right": 964, "bottom": 1163 },
       "boundsAlphaThreshold": 16
     },
     { "id": "wp", "color": "w", "type": "p", "name": "白兵", "path": null },
