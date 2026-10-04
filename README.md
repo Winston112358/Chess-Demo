@@ -1,8 +1,8 @@
 # Chess Demo · 国际象棋
 
-网页与 Windows 客户端共用一个前端。当前支持同机双人、人机对弈（固定版本 Stockfish 19）、合法目标提示、升变、悔棋、翻转、和棋申请、SAN 棋谱及 FEN 局面工具。正式游戏仍使用临时符号；写实素材进度见 [棋子素材说明](docs/PIECE-ASSETS.md)。
+网页与 Windows 客户端共用一个前端。当前支持同机双人、人机对弈（固定版本 Stockfish 19）、写实 Staunton 棋子（面对面 front/rear 视角）、合法目标提示、升变、悔棋、翻转、和棋申请、SAN 棋谱及 FEN 局面工具。
 
-人机对弈使用固定版本引擎：浏览器加载 `stockfish@19.0.0` 的 lite single-threaded WASM，Windows 客户端通过受限 IPC 调用原生 `sf_19` universal 引擎。引擎来源、许可与源码归档见 [Stockfish 资源说明](docs/STOCKFISH-RESOURCES.md)。
+人机对弈使用固定版本引擎：浏览器加载 `stockfish@19.0.0` 的 lite single-threaded WASM，Windows 客户端通过受限 IPC 调用原生 `sf_19` universal 引擎。引擎来源、许可与源码归档见 [Stockfish 资源说明](docs/STOCKFISH-RESOURCES.md)；棋子素材规格见 [写实棋子素材阶段](docs/PIECE-ASSETS.md)。
 
 ## 启动
 
@@ -14,30 +14,38 @@ npm.cmd run setup:stockfish   # 首次下载并校验固定版本的 Stockfish �
 npm.cmd start
 ```
 
-打开 http://127.0.0.1:5173 。点击当前方棋子查看合法目标，再点击目标走棋；在“对局设置”中选择同机双人或人机对弈、执棋色与难度。
+`prepare:pieces` 会在 `start`、`dev`、`build`、`test` 前自动运行：严格校验 `assets/pieces-manifest.json`（24/24 视图），把 16 张原始 PNG 逐字节复制到 `src/web/public/pieces/staunton-v3/`，并生成 `src/web/piece-assets.generated.js`（不修改原图）。相关命令：
+
+```powershell
+npm.cmd run check:pieces     # 严格校验素材清单与 PNG
+npm.cmd run preview:pieces   # 生成 .cache/piece-preview/ 对照图库
+npm.cmd run test:assets      # 素材校验与图库的 Playwright 检查
+```
+
+打开 http://127.0.0.1:5173 。点击当前方棋子查看合法目标，再点击目标走棋；在“对局设置”中选择同机双人或人机对弈、执棋色与难度。近方棋子显示背面、远方棋子显示正面；翻转棋盘后改用另一侧视角。
 
 ```powershell
 npm.cmd desktop    # 构建网页后启动 Electron（原生引擎）
-npm.cmd test       # 规则、资源与 IPC/代理测试
+npm.cmd test       # 规则、资源、IPC/代理与棋子几何测试
 npm.cmd build      # 静态网页输出到 dist/web
 npm.cmd test:ui    # 使用本机 Edge 运行浏览器与桌面自动化
 npm.cmd test:engine-transports  # 引擎通信层测试（Node + 真实浏览器）
 npm.cmd check      # 测试、构建、浏览器自动化
 ```
 
-浏览器自动化默认使用本机 Microsoft Edge，桌面自动化通过 Playwright 启动 Electron，不要求人工点击。首次启动桌面或运行桌面测试时，Electron 可能联网下载运行时；随后可离线启动。关闭开发服务器：在启动它的终端按 Ctrl+C；关闭桌面窗口即可退出 Electron。
+浏览器自动化默认使用本机 Microsoft Edge，桌面自动化通过 Playwright 启动 Electron，不要求人工点击。首次启动桌面或运行桌面测试时，Electron 可能联网下载运行时；随后可离线启动。
 
-## Windows 便携版
+## 发行包
 
-已生成 0.3.0 便携版 `release/Chess-Demo-0.3.0-x64.exe`，双击启动，无需安装 Node.js。本版本包含原生 Stockfish，可离线人机对弈；写实素材尚未接入。0.2.0 的 `release/Chess-Demo-0.2.0-x64.exe`（若有保留）只是同机双人版本。
+已生成 0.4.0 便携版与网页版：`release/Chess-Demo-0.4.0-x64.exe`（双击启动，无需安装 Node.js，包含写实素材与原生 Stockfish，可离线人机对弈）和 `release/Chess-Web-0.4.0.zip`（静态网页，部署到 HTTP/HTTPS 服务器或子目录，浏览器内 WASM 引擎）。0.3.0 的人机版与 0.2.0 的同机双人版若保留，仅作历史版本。
 
 ```powershell
-npm.cmd run dist:win       # 构建 Windows x64 便携 EXE（含原生引擎与源码资料）
-npm.cmd run test:release   # 把真实 EXE 复制到独立临时目录，验证断网人机对弈与退出释放
-npm.cmd run dist:web       # 静态网页 ZIP，随附引擎许可与精确源码
+npm.cmd run dist:win       # Windows x64 便携 EXE（含原生引擎、素材与源码资料）
+npm.cmd run dist:web       # 静态网页 ZIP（含 WASM 引擎、许可与源码）
+npm.cmd run test:release   # 真实 EXE 与网页包在仓库外的离线验收
 ```
 
-发行包内 `resources/stockfish/` 包含原生 EXE 与许可、网页引擎许可、两份精确源码归档及 manifest，具体大小与摘要见 [Windows 构建说明](docs/WINDOWS-BUILD.md)。`release/Chess-Web-0.3.0.zip` 是可部署的网页包，解压后将整个目录放到 HTTP/HTTPS 静态服务器，支持根目录与子目录；许可与源码在 `third-party/stockfish/`。不要直接双击 index.html。发行测试同时验证真实 EXE 和解压到独立目录的网页 ZIP。
+发行包大小与摘要见 [Windows 构建说明](docs/WINDOWS-BUILD.md)。写实棋子已按用户反馈放大，并检查面对面方向、升变候选和窄屏显示；当前游戏截图见 docs/images/。发行包未签名、使用 Electron 默认图标。
 
 ## 协作入口
 

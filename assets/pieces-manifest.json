@@ -88,7 +88,7 @@
         }
       },
       "sharedViewsReason": "GPT inspected: upright half-turn symmetric physical geometry; use this same unrotated PNG for both views.",
-      "relativeHeight": 0.95
+      "relativeHeight": 0.96
     },
     {
       "id": "wr",
@@ -128,7 +128,7 @@
         }
       },
       "sharedViewsReason": "GPT inspected: upright half-turn symmetric physical geometry; use this same unrotated PNG for both views.",
-      "relativeHeight": 0.72
+      "relativeHeight": 0.86
     },
     {
       "id": "wb",
@@ -167,7 +167,7 @@
           "boundsAlphaThreshold": 16
         }
       },
-      "relativeHeight": 0.86
+      "relativeHeight": 0.92
     },
     {
       "id": "wn",
@@ -206,7 +206,7 @@
           "boundsAlphaThreshold": 16
         }
       },
-      "relativeHeight": 0.82
+      "relativeHeight": 0.88
     },
     {
       "id": "wp",
@@ -246,7 +246,7 @@
         }
       },
       "sharedViewsReason": "GPT inspected: upright half-turn symmetric physical geometry; use this same unrotated PNG for both views.",
-      "relativeHeight": 0.62
+      "relativeHeight": 0.8
     },
     {
       "id": "bk",
@@ -326,7 +326,7 @@
         }
       },
       "sharedViewsReason": "GPT inspected: upright half-turn symmetric physical geometry; use this same unrotated PNG for both views.",
-      "relativeHeight": 0.95
+      "relativeHeight": 0.96
     },
     {
       "id": "br",
@@ -366,7 +366,7 @@
         }
       },
       "sharedViewsReason": "GPT inspected: upright half-turn symmetric physical geometry; use this same unrotated PNG for both views.",
-      "relativeHeight": 0.72
+      "relativeHeight": 0.86
     },
     {
       "id": "bb",
@@ -405,7 +405,7 @@
           "boundsAlphaThreshold": 16
         }
       },
-      "relativeHeight": 0.86
+      "relativeHeight": 0.92
     },
     {
       "id": "bn",
@@ -444,7 +444,7 @@
           "boundsAlphaThreshold": 16
         }
       },
-      "relativeHeight": 0.82
+      "relativeHeight": 0.88
     },
     {
       "id": "bp",
@@ -484,13 +484,13 @@
         }
       },
       "sharedViewsReason": "GPT inspected: upright half-turn symmetric physical geometry; use this same unrotated PNG for both views.",
-      "relativeHeight": 0.62
+      "relativeHeight": 0.8
     }
   ],
   "rendering": {
     "boundsAlphaThreshold": 16,
-    "maximumContentHeightFraction": 0.86,
-    "maximumContentWidthFraction": 0.78,
-    "bottomBaselineFraction": 0.92
+    "maximumContentHeightFraction": 0.94,
+    "maximumContentWidthFraction": 0.84,
+    "bottomBaselineFraction": 0.97
   }
 }

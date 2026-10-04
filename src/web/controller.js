@@ -2,6 +2,7 @@ import { createGameSession } from '../core/game-session.js';
 import { createMatchController } from '../engine/match-controller.js';
 import { createAppEngine } from './engine.js';
 import { createBoardView } from './board.js';
+import { createPieceElement } from './pieces.js';
 
 const REASON_TEXT = {
   checkmate: '将死',
@@ -131,8 +132,9 @@ export function startApp() {
   function attemptMove(from, to) {
     const result = matchController.tryMove({ from, to });
     if (result.code === 'promotion-required') {
-      pendingPromotion = { from, to };
+      pendingPromotion = { from, to, color: snapshot.turn };
       promotionDialog.showModal();
+      updatePromotionPreviews();
       return;
     }
     clearSelection();
@@ -152,6 +154,16 @@ export function startApp() {
   function cancelPromotion() {
     clearTransient();
     render();
+  }
+
+  function updatePromotionPreviews() {
+    if (!promotionDialog.open || !pendingPromotion) return;
+    const { color } = pendingPromotion;
+    for (const option of promotionDialog.querySelectorAll('[data-promotion]')) {
+      option.querySelector('.promotion-piece')?.replaceChildren(
+        createPieceElement({ color, type: option.dataset.promotion }, { flipped }),
+      );
+    }
   }
 
   function findKingSquare() {
@@ -296,6 +308,7 @@ export function startApp() {
     renderDrawClaims();
     renderEngineStatus();
     renderSettings();
+    updatePromotionPreviews();
     undoBtn.disabled = !snapshot.canUndo;
     syncFen();
   }

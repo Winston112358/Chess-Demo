@@ -1,4 +1,5 @@
 import { test, expect, chromium } from '@playwright/test';
+import { expectInvalidFenPreservesGame, expectPieceImages } from './piece-assets.js';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -50,12 +51,28 @@ test('web ZIP runs from an isolated HTTP subdirectory with matching engine sourc
       } catch { response.writeHead(404).end(); }
     });
     await new Promise((resolvePromise) => server.listen(0, '127.0.0.1', resolvePromise));
+    const readme = await readFile(join(site, 'README.txt'), 'utf8');
+    expect(readme).not.toContain('素材尚未接入');
+    expect(readme).toContain('翻转棋盘');
     browser = await chromium.launch({ channel: 'msedge' });
     const page = await browser.newPage();
     const errors = [];
+    const externals = [];
+    const origin = `http://127.0.0.1:${server.address().port}`;
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(`http://127.0.0.1:${server.address().port}${prefix}`);
+    page.on('request', (request) => {
+      if (!request.url().startsWith(origin)) externals.push(request.url());
+    });
+    await page.goto(`${origin}${prefix}`);
     await expect(page.locator('#board .piece')).toHaveCount(32);
+    await expectPieceImages(page);
+    await page.getByRole('button', { name: '翻转棋盘' }).click();
+    await expect(page.locator('[data-square="e1"] .piece')).toHaveAttribute('data-view', 'front');
+    await expect(page.locator('[data-square="e8"] .piece')).toHaveAttribute('data-view', 'rear');
+    await expectPieceImages(page, { flipped: true });
+    await page.getByRole('button', { name: '翻转棋盘' }).click();
+    await expectPieceImages(page);
+    await expectInvalidFenPreservesGame(page);
     expect(await page.evaluate(() => typeof window.chessEngine)).toBe('undefined');
     await page.selectOption('#difficulty', 'easy');
     await page.selectOption('#game-mode', 'computer');
@@ -65,6 +82,9 @@ test('web ZIP runs from an isolated HTTP subdirectory with matching engine sourc
     await expect(page.locator('#turn')).toHaveText('白方走棋');
     await expect(page.locator('#engine-status')).toHaveText('');
     expect(requests).toContain(`${prefix}engines/stockfish/stockfish-19-lite-single.wasm`);
+    expect(requests.some((pathname) => pathname.startsWith(`${prefix}pieces/staunton-v3/`) && pathname.endsWith('.png'))).toBe(true);
+    expect(requests.some((pathname) => pathname.startsWith(`${prefix}pieces/staunton-v3/`) && pathname.includes('wn-rear'))).toBe(true);
+    expect(externals).toEqual([]);
     expect(errors).toEqual([]);
     await page.screenshot({ path: 'test-results/web-release.png', fullPage: true });
   } finally {

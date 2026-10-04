@@ -1,5 +1,7 @@
 # DS-06：接入写实棋子，发布 0.4.0
 
+本任务已完成并由 GPT 验收。2026-10-04 用户追加要求增大棋子；最新尺寸以 assets/pieces-manifest.json 和 docs/PIECE-ASSETS.md 为准，下面规格已同步，原始 DS 回报记录的是调整前状态。最终结果见 docs/handoff/GPT-11-realistic-release-review.md。
+
 工作目录 D:\Chess。DS-05 已经 GPT 修正并验收。GPT 已提供完整素材：assets/pieces-manifest.json 为 ready、24/24 槽、16 张独立 PNG；预览 docs/images/staunton-v3-pack-preview.png。你负责代码接入、自动验证与打包，不负责生成或修改图片。所有图片已齐，不需要猜图或补图。
 
 ## 读取与写入范围
@@ -24,7 +26,7 @@ createPieceElement 保留稳定 .piece 类、data-color、data-piece 和棋格 a
 
 显示朝向只有一个判断：nearColor = flipped ? 'b' : 'w'；piece.color === nearColor 用 rear，另一阵营用 front。默认白下黑上，白 rear、黑 front；翻转后黑 rear、白 front。翻转重新选择图片，不对棋子位图或容器使用 rotate/scaleX/mirror。坐标保持 a1–h8，不能改 FEN 或棋局历史。朝向不随轮到谁、humanColor、走法、所在半场变化；一匹白马走到第七横线仍按阵营选择视图。
 
-使用 manifest 的 contentBounds/relativeHeight 按 PIECE-ASSETS.md 的公式等比缩放、水平居中并把底座对齐棋格 92% 高处。王相对高 1，后 .95，象 .86，马 .82，车 .72，兵 .62。不要按整张 PNG 同样高度缩放，不拉伸，不裁掉棋子。可用绝对定位和百分比，避免每格反复测布局。保持选中、合法目标、吃子、将军、最近一步标记清楚；标记不能完全盖住棋子。
+使用 manifest 的 contentBounds/relativeHeight 按 PIECE-ASSETS.md 的公式等比缩放、水平居中并把底座对齐棋格 97% 高处，高度上限 94%。王相对高 1，后 .96，象 .92，马 .88，车 .86，兵 .80。不要按整张 PNG 同样高度缩放，不拉伸，不裁掉棋子。可用绝对定位和百分比，避免每格反复测布局。保持选中、合法目标、吃子、将军、最近一步标记清楚；标记不能完全盖住棋子。
 
 升变窗口四个候选也复用同一图片渲染器，颜色来自当前升变的兵，视角来自当前棋盘 flipped；保留中文名称与键盘/鼠标操作、取消行为。候选用明确的方形图框。翻转时更新已打开候选的视角。模态窗口会阻止外部按钮点击，可用程序派发翻转事件验证此状态，不解除模态限制。不得放宽 core 的合法升变或改变引擎异步处理。不要改棋盘布局尺寸；先完成本次素材接入。
 

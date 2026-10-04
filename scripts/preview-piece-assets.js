@@ -168,7 +168,7 @@ main.grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-colu
 <body>
 <header>
   <h1>棋子素材对照图库</h1>
-  <p class="count">样张 ${provided.length}/${report.counts.total} 视图，未接入正式游戏</p>
+  <p class="count">样张 ${provided.length}/${report.counts.total} 视图，独立素材对照图库</p>
   <p class="meta">清单状态：${escapeHtml(manifest.status)} · 风格：${escapeHtml(manifest.style ?? '未标注')} · 相机俯角目标：${escapeHtml(String(manifest.camera?.elevationDegreesTarget ?? '未标注'))}°</p>
 </header>
 

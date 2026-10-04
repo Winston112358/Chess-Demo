@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
+import { expectInvalidFenPreservesGame, expectPieceImages } from './piece-assets.js';
 
 async function freePort() {
   const server = createServer();
@@ -64,13 +65,25 @@ test('portable EXE starts outside the repository, plays offline and releases the
     let page = context.pages()[0];
     if (!page) page = await context.waitForEvent('page');
     const errors = [];
+    const externalRequests = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    page.on('request', (request) => {
+      const url = request.url();
+      if (!url.startsWith('file:') && !url.startsWith('devtools:')) externalRequests.push(url);
+    });
     await expect(page.locator('#board .piece')).toHaveCount(32);
+    await expectPieceImages(page);
     expect(page.url()).toMatch(/^file:/);
     expect(page.url()).not.toContain(projectRoot.replaceAll('\\', '/'));
     await context.setOffline(true);
     await page.reload();
     await expect(page.locator('#board .piece')).toHaveCount(32);
+    await expectPieceImages(page);
+    await page.getByRole('button', { name: '翻转棋盘' }).click();
+    await expectPieceImages(page, { flipped: true });
+    await page.getByRole('button', { name: '翻转棋盘' }).click();
+    await expectPieceImages(page);
+    await expectInvalidFenPreservesGame(page);
     await page.locator('[data-square="e2"]').click();
     await page.locator('[data-square="e4"]').click();
     await expect(page.locator('#turn')).toHaveText('黑方走棋');
@@ -91,6 +104,7 @@ test('portable EXE starts outside the repository, plays offline and releases the
     spawned = (await listEnginePids()).filter((pid) => !baseline.includes(pid));
     expect(spawned.length, '打包版本应启动原生 Stockfish').toBeGreaterThan(0);
     expect(errors).toEqual([]);
+    expect(externalRequests).toEqual([]);
     await page.screenshot({ path: 'test-results/portable-computer.png' });
 
     await page.locator('[data-square="g1"]').click();

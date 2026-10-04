@@ -63,7 +63,7 @@ export function createBoardView({ boardEl, ranksEl, filesEl, onSquareClick }) {
       if (square === checkSquare) element.classList.add('square--check');
       if (lastMove && (square === lastMove.from || square === lastMove.to)) element.classList.add('square--last');
 
-      element.replaceChildren(...(piece ? [createPieceElement(piece)] : []));
+      element.replaceChildren(...(piece ? [createPieceElement(piece, { flipped })] : []));
       if (piece) {
         element.dataset.piece = piece.type;
         element.dataset.color = piece.color;

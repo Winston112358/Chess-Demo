@@ -53,7 +53,8 @@ async function main() {
 本地体验（已安装 Python）：在本目录运行 python -m http.server 8080 --bind 127.0.0.1，
 然后用浏览器访问 http://127.0.0.1:8080/ 。关闭服务在终端按 Ctrl+C。
 选择“人机对弈”、执棋色和难度即可与电脑下棋。
-引擎许可与源码说明见 THIRD-PARTY.md。写实棋子素材尚未接入。
+写实棋子采用面对面视角，翻转棋盘会切换前后视图。
+引擎许可与源码说明见 THIRD-PARTY.md。
 `, 'utf8');
     const packed = join(staging, `Chess-Web-${version}.zip`);
     await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',

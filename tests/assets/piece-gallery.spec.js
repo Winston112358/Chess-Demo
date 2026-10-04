@@ -28,7 +28,7 @@ test('gallery shows both provided views at three scales on two tile colors', asy
   await page.goto(pathToFileURL(PREVIEW_INDEX).href);
 
   await expect(page.getByRole('heading', { name: '棋子素材对照图库' })).toBeVisible();
-  await expect(page.locator('.count')).toHaveText(`样张 ${provided.length}/24 视图，未接入正式游戏`);
+  await expect(page.locator('.count')).toHaveText(`样张 ${provided.length}/24 视图，独立素材对照图库`);
   await expect(page.locator('[data-state="provided"]')).toHaveCount(provided.length);
   await expect(page.locator('[data-state="missing"]')).toHaveCount(missing.length);
 
@@ -90,7 +90,7 @@ test('gallery fits a 320px viewport without horizontal overflow', async ({ page 
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto(pathToFileURL(PREVIEW_INDEX).href);
-  await expect(page.locator('.count')).toHaveText(`样张 ${provided.length}/24 视图，未接入正式游戏`);
+  await expect(page.locator('.count')).toHaveText(`样张 ${provided.length}/24 视图，独立素材对照图库`);
 
   const fits = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
   expect(fits).toBe(true);
