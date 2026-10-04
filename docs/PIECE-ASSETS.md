@@ -1,6 +1,6 @@
 # 写实棋子素材阶段
 
-2026-10-04 用户明确：双方隔着棋盘面对面，近方棋子朝向远方，远方棋子朝向观察者。当前有效样张为 assets/concepts/wn-rear-overhead-v3.png（白马后俯视）与 assets/concepts/bn-front-overhead-v3.png（黑马前俯视），尚未接入正式游戏。
+2026-10-04 用户明确：双方隔着棋盘面对面，近方棋子朝向远方，远方棋子朝向观察者。GPT 已生成整套写实素材，清单有效 24/24 视图槽，共 16 张独立 PNG。素材尚未接入正式游戏；界面接入见 docs/tasks/DS-06-realistic-pieces.md。
 
 旧 wn-staunton-v1.png 与 wn-staunton-overhead-v2.png 都从侧面展示马脸，已弃用；只作历史对照，不用于当前图库或整套风格参考。
 
@@ -35,12 +35,28 @@
 | alpha>16 包围盒 | x=337–916，y=90–1149 | x=334–925，y=86–1157 |
 | SHA-256 | 09005d1b0bdf3d9a49609f75c31f4496974020629edabde65894f9fc32a5c392 | ac64a4f5d3423077a52ae8cf8584f939d280366b9038268d642968ad2f4cabcf |
 
-两张未碰到画布边缘。已查看大图，分别为后俯视和前俯视；48/64/96px 棋格中的辨识度仍需图库与人工验收。
+两张未碰到画布边缘。已查看大图，分别为后俯视和前俯视；上述表格仅记录最初两张样张，完整清单数据以 assets/pieces-manifest.json 为准。
+
+## 整套素材与渲染规格
+
+新增 14 张原图位于 assets/pieces-realistic-v3/，保留上述 2 张最初样张，共 16 张原图。全部是 1254×1254 的 8-bit RGBA PNG；严格检查已核对尺寸、字节数、SHA-256、真实透明像素与 alpha>16 包围盒，内容均未触及画布边缘。
+
+马和象每种颜色各有独立 front/rear 图片。王的横向十字冠、后的偶数齿冠、车的偶数城垛、兵的球头与车削底座采用竖轴半周对称造型，经 GPT 查看后在 front/rear 两槽明确引用同一路径；不旋转图片。纹理和光照保持在相机空间，造型对称不意味着位图每个像素镜像对称。
+
+manifest 为每种棋子提供 relativeHeight，并在 rendering 声明高度上限 0.86、宽度上限 0.78、底座基线 0.92（均是棋格边长的比例）。设包围盒宽 CW=right-left+1、高 CH=bottom-top+1，取 s=min(0.86×relativeHeight/CH, 0.78/CW)，则图片在棋格内：
+
+- width = 100×width×s%，height = 100×height×s%；等比缩放。
+- left = 50-100×(left+right+1)/2×s%。
+- top = 92-100×(bottom+1)×s%。
+
+其中 width/height/left/right/top/bottom 来自该视图原始 PNG 元数据。使用定位和等比缩放，不改写、裁剪或变形原图；容器大小变化时上述百分比自然跟随。棋盘与升变候选复用同一渲染器。
+
+docs/images/staunton-v3-pack-preview.png 展示按此规格归一化的整套素材与两种棋盘朝向，已人工查看。它是接入前的图库预览，不是游戏截图。DS-05 图库另保留原图在 48/64/96px 棋格中的对照；正式棋盘仍需 DS-06 接入后再次视觉验收。
 
 ## 分工与清单
 
 **所有图片由 GPT 使用 imagegen 生成。DeepSeek 不具备图片生成能力，任务不得要求它生成新图片、改变相机或生成相反视角。** DS 只负责按照现有 PNG 做校验、对照图库及后续界面接入；缺图时记录缺件，由 GPT 提供，不能用 CSS 或图像处理伪造。
 
-assets/pieces-manifest.json 升为 manifestVersion=2、status=draft，每个 piece 有 views.front/views.rear。未提供的槽为 null；已有槽是含 path、尺寸、字节数、摘要和包围盒的对象。当前有效 2/24，缺失 22 个视图槽。严格检查应失败；显式 --allow-partial 只接受 draft 的 null，不忽略已提供图片错误。
+assets/pieces-manifest.json 为 manifestVersion=2、status=ready，每个 piece 有 views.front/views.rear，24 槽全部提供。对象含 path、尺寸、字节数、摘要和包围盒；共享图片的条目显式声明 sharedViewsReason。严格 npm.cmd run check:pieces 应通过 24/24。历史任务 DS-05 的 2/24 计数是当时样张状态，不能用于当前接入。
 
-GPT 继续生成其余视图、统一材质与相机，再安排正式接入；当前游戏仍使用占位符号。
+DS-06 只接入 GPT 已提供的整套素材，不生成图片。校验与图库覆盖完整清单，缺件、摘要错误、路径越界、缺失视图键和篡改 alpha 阈值都必须真实失败。
