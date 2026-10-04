@@ -22,7 +22,7 @@ npm.cmd run preview:pieces   # 生成 .cache/piece-preview/ 对照图库
 npm.cmd run test:assets      # 素材校验与图库的 Playwright 检查
 ```
 
-打开 http://127.0.0.1:5173 。点击当前方棋子查看合法目标，再点击目标走棋；在“对局设置”中选择同机双人或人机对弈、执棋色与难度。近方棋子显示背面、远方棋子显示正面；翻转棋盘后改用另一侧视角。
+打开 http://127.0.0.1:5173 。点击当前方棋子查看合法目标，再点击目标走棋；人机对弈先选择执棋色与难度，再点击“开始”。更改设置、重置棋局或载入 FEN 后需要再次点击“开始”，更改设置会保留当前局面。“吃子提示”按钮可开关所选棋子的可吃目标标记，关闭提示仍可正常吃子。近方棋子显示背面、远方棋子显示正面；翻转棋盘后改用另一侧视角。
 
 ```powershell
 npm.cmd desktop    # 构建网页后启动 Electron（原生引擎）
@@ -37,7 +37,7 @@ npm.cmd check      # 测试、构建、浏览器自动化
 
 ## 发行包
 
-已生成 0.4.0 便携版与网页版：`release/Chess-Demo-0.4.0-x64.exe`（双击启动，无需安装 Node.js，包含写实素材与原生 Stockfish，可离线人机对弈）和 `release/Chess-Web-0.4.0.zip`（静态网页，部署到 HTTP/HTTPS 服务器或子目录，浏览器内 WASM 引擎）。0.3.0 的人机版与 0.2.0 的同机双人版若保留，仅作历史版本。
+已生成 0.4.1 便携版与网页版：`release/Chess-Demo-0.4.1-x64.exe`（双击启动，无需安装 Node.js，包含写实素材与原生 Stockfish，可离线人机对弈）和 `release/Chess-Web-0.4.1.zip`（静态网页，部署到 HTTP/HTTPS 服务器或子目录，浏览器内 WASM 引擎）。0.4.1 增加吃子提示开关与人机对弈“开始”按钮；较早版本若保留，仅作历史版本。
 
 ```powershell
 npm.cmd run dist:win       # Windows x64 便携 EXE（含原生引擎、素材与源码资料）
